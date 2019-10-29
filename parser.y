@@ -520,6 +520,7 @@ import (
 
 	/* The following tokens belong to NotKeywordToken. Notice: make sure these tokens are contained in NotKeywordToken. */
 	addDate			"ADDDATE"
+        advise                  "ADVISE"
 	bitAnd			"BIT_AND"
 	bitOr			"BIT_OR"
 	bitXor			"BIT_XOR"
@@ -538,6 +539,8 @@ import (
 	internal		"INTERNAL"
 	min			"MIN"
 	max			"MAX"
+        maxMinutes              "MAX_MINUTES"
+        maxIdxNum               "MAX_IDXNUM"
 	maxExecutionTime	"MAX_EXECUTION_TIME"
 	now			"NOW"
 	position		"POSITION"
@@ -733,6 +736,7 @@ import (
 	KillStmt			"Kill statement"
 	LoadDataStmt			"Load data statement"
 	LoadStatsStmt			"Load statistic statement"
+        IndexAdviseStmt                 "Index advise statement"
 	LockTablesStmt			"Lock tables statement"
 	PreparedStmt			"PreparedStmt"
 	SelectStmt			"SELECT statement"
@@ -882,6 +886,8 @@ import (
 	LoadDataSetItem			"Single load data specification"
 	LocalOpt			"Local opt"
 	LockClause         		"Alter table lock clause"
+        MaxTime                         "Max running time"
+        MaxIdxNum                       "Max number of indexes"
 	NumLiteral			"Num/Int/Float/Decimal Literal"
 	NoWriteToBinLogAliasOpt		"NO_WRITE_TO_BINLOG alias LOCAL or empty"
 	ObjectType			"Grant statement object type"
@@ -4454,8 +4460,8 @@ TiDBKeyword:
 | "READ_CONSISTENT_REPLICA" | "READ_FROM_STORAGE" | "QB_NAME" | "QUERY_TYPE" | "MEMORY_QUOTA" | "OLAP" | "OLTP" | "TOPN" | "TIKV" | "TIFLASH" | "SPLIT" | "OPTIMISTIC" | "PESSIMISTIC" | "WIDTH" | "REGIONS" | "REGION"
 
 NotKeywordToken:
- "ADDDATE" | "BIT_AND" | "BIT_OR" | "BIT_XOR" | "CAST" | "COPY" | "COUNT" | "CURTIME" | "DATE_ADD" | "DATE_SUB" | "EXTRACT" | "GET_FORMAT" | "GROUP_CONCAT"
-| "INPLACE" | "INSTANT" | "INTERNAL" |"MIN" | "MAX" | "MAX_EXECUTION_TIME" | "NOW" | "RECENT" | "POSITION" | "SUBDATE" | "SUBSTRING" | "SUM"
+ "ADDDATE" | "ADVISE" | "BIT_AND" | "BIT_OR" | "BIT_XOR" | "CAST" | "COPY" | "COUNT" | "CURTIME" | "DATE_ADD" | "DATE_SUB" | "EXTRACT" | "GET_FORMAT" | "GROUP_CONCAT"
+| "INPLACE" | "INSTANT" | "INTERNAL" | "MIN" | "MAX" | "MAX_MINUTES" | "MAX_IDXNUM" | "MAX_EXECUTION_TIME" | "NOW" | "RECENT" | "POSITION" | "SUBDATE" | "SUBSTRING" | "SUM"
 | "STD" | "STDDEV" | "STDDEV_POP" | "STDDEV_SAMP" | "VARIANCE" | "VAR_POP" | "VAR_SAMP"
 | "TIMESTAMPADD" | "TIMESTAMPDIFF" | "TOKUDB_DEFAULT" | "TOKUDB_FAST" | "TOKUDB_LZMA" | "TOKUDB_QUICKLZ" | "TOKUDB_SNAPPY" | "TOKUDB_SMALL" | "TOKUDB_UNCOMPRESSED" | "TOKUDB_ZLIB" | "TOP" | "TRIM" | "NEXT_ROW_ID"
 | "EXPR_PUSHDOWN_BLACKLIST" | "OPT_RULE_BLACKLIST"
@@ -8420,6 +8426,7 @@ Statement:
 |	KillStmt
 |	LoadDataStmt
 |	LoadStatsStmt
+|       IndexAdviseStmt
 |	PreparedStmt
 |	RollbackStmt
 |	RenameTableStmt
@@ -10168,6 +10175,51 @@ RevokeRoleStmt:
 			Users: $4.([]*auth.UserIdentity),
 		}
 	 }
+
+
+
+
+/************************ IndexAdviseStmt ****************************
+ * Recomend indexes for a given workload
+ * See ??????
+ *********************************************************************/
+
+IndexAdviseStmt:
+        "INDEX" "ADVISE" LocalOpt "INFILE" stringLit MaxTime MaxIdxNum
+        {
+                x := &ast.IndexAdviseStmt {
+                        Path:           $5,
+                        MaxTime:        $6.(uint64),
+                        MaxIdxNum:      $7.(uint64),
+                }
+                
+                if $3 != nil {
+                        x.IsLocal = true
+                }
+                
+                $$ = x
+        }
+
+MaxTime:
+        {
+                $$ = uint64(0)
+        }
+|      "MAX_MINUTES" NUM 
+        {
+                $$ = getUint64FromNUM($2)
+        }
+
+MaxIdxNum:
+        {
+                $$ = uint64(1024)
+        }
+|       "MAX_IDXNUM" NUM 
+        {
+                $$ = getUint64FromNUM($2)
+        }
+
+
+
 
 /**************************************LoadDataStmt*****************************************
  * See https://dev.mysql.com/doc/refman/5.7/en/load-data.html
