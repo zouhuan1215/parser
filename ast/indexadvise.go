@@ -24,6 +24,7 @@ var (
 // IndexAdviseStmt is a statement to recommend indexes for a given workload
 // See ???????
 // TODO: input sql file parse, like line-breaker
+// rebase just didn't work
 type IndexAdviseStmt struct {
 	stmtNode
 
