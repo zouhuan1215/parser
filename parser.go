@@ -16729,7 +16729,7 @@ yynewstate:
 		}
 	case 1880:
 		{
-			parser.yyVAL.item = uint64(0)
+			parser.yyVAL.item = uint64(60)
 		}
 	case 1881:
 		{

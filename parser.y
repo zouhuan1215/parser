@@ -10202,7 +10202,7 @@ IndexAdviseStmt:
 
 MaxTime:
         {
-                $$ = uint64(0)
+                $$ = uint64(60)
         }
 |      "MAX_MINUTES" NUM 
         {

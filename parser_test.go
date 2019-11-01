@@ -984,6 +984,10 @@ func (s *testParserSuite) TestDBAStmt(c *C) {
 		// for change statement
 		{"change pump to node_state ='paused' for node_id '127.0.0.1:8250'", true, "CHANGE PUMP TO NODE_STATE ='paused' FOR NODE_ID '127.0.0.1:8250'"},
 		{"change drainer to node_state ='paused' for node_id '127.0.0.1:8249'", true, "CHANGE DRAINER TO NODE_STATE ='paused' FOR NODE_ID '127.0.0.1:8249'"},
+
+		// index advise statement
+		{"index advise local infile '/tmp/t.sql' max_minutes 10 max_idxnum 10", true, "INDEX ADVISE LOCAL INFILE '/tmp/t.sql' MAX_MINUTES 10 MAX_IDXNUM 10"},
+		{"index advise infile '/tmp/t.sql'", true, "INDEX ADVISE INFILE '/tmp/t.sql' MAX_MINUTES 60 MAX_IDXNUM 1024"},
 	}
 	s.RunTest(c, table)
 }

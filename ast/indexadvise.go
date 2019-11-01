@@ -46,12 +46,12 @@ func (n *IndexAdviseStmt) Restore(ctx *RestoreCtx) error {
 	ctx.WriteString(n.Path)
 
 	if n.MaxTime != 0 {
-		ctx.WriteKeyWord(" MAXTIME ")
+		ctx.WriteKeyWord(" MAX_MINUTES ")
 		ctx.WritePlainf("%d", n.MaxTime)
 	}
 
 	if n.MaxIdxNum != 0 {
-		ctx.WriteKeyWord(" MAX RECOMMEND INDEX NUMBER ")
+		ctx.WriteKeyWord(" MAX_IDXNUM ")
 		ctx.WritePlainf("%d", n.MaxIdxNum)
 	}
 
