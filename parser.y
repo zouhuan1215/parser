@@ -160,6 +160,7 @@ import (
 	keys			"KEYS"
 	kill			"KILL"
 	lag			"LAG"
+	language		"LANGUAGE"
 	lastValue		"LAST_VALUE"
 	lead			"LEAD"
 	leading			"LEADING"
@@ -280,6 +281,7 @@ import (
 	account		"ACCOUNT"
 	action		"ACTION"
 	after		"AFTER"
+	against		"AGAINST"
 	always		"ALWAYS"
 	algorithm	"ALGORITHM"
 	any 		"ANY"
@@ -342,6 +344,7 @@ import (
 	exchange	"EXCHANGE"
 	exclusive       "EXCLUSIVE"
 	execute		"EXECUTE"
+	expansion	"EXPANSION"
 	expire		"EXPIRE"
 	faultsSym	"FAULTS"
 	fields		"FIELDS"
@@ -355,6 +358,7 @@ import (
 	grants		"GRANTS"
 	hash		"HASH"
 	history		"HISTORY"
+	hosts		"HOSTS"
 	hour		"HOUR"
 	identified	"IDENTIFIED"
 	importKwd	"IMPORT"
@@ -376,6 +380,7 @@ import (
 	list		"LIST"
 	local		"LOCAL"
 	location	"LOCATION"
+	logs		"LOGS"
 	master		"MASTER"
 	microsecond	"MICROSECOND"
 	minute		"MINUTE"
@@ -836,6 +841,7 @@ import (
 	FieldList			"field expression list"
 	FieldTerminator			"Field terminator"
 	FlushOption			"Flush option"
+	FulltextSearchModifierOpt	"Fulltext modifier"
 	PluginNameList			"Plugin Name List"
 	TableRefsClause			"Table references clause"
 	FieldItem			"Field item for load data clause"
@@ -3901,6 +3907,14 @@ Expression:
 			$$ = &ast.UnaryOperationExpr{Op: opcode.Not, V: $2}
 		}
 	}
+|	"MATCH" '(' ColumnNameList ')' "AGAINST" '(' BitExpr FulltextSearchModifierOpt ')'
+	{
+		$$ = &ast.MatchAgainst {
+			ColumnNames: $3.([]*ast.ColumnName),
+			Against: $7,
+			Modifier: ast.FulltextSearchModifier($8.(int)),
+		}
+	}
 |	BoolPri IsOrNotOp trueKwd %prec is
 	{
 		$$ = &ast.IsTruthExpr{Expr:$1, Not: !$2.(bool), True: int64(1)}
@@ -3926,6 +3940,27 @@ MaxValueOrExpression:
 		$$ = $1
 	}
 
+FulltextSearchModifierOpt:
+	/* empty */
+	{
+		$$ = ast.FulltextSearchModifierNaturalLanguageMode
+	}
+|	"IN" "NATURAL" "LANGUAGE" "MODE"
+	{
+		$$ = ast.FulltextSearchModifierNaturalLanguageMode
+	}
+|	"IN" "NATURAL" "LANGUAGE" "MODE" "WITH" "QUERY" "EXPANSION"
+	{
+		$$ = ast.FulltextSearchModifierNaturalLanguageMode | ast.FulltextSearchModifierWithQueryExpansion
+	}
+| "IN" "BOOLEAN" "MODE"
+	{
+		$$ = ast.FulltextSearchModifierBooleanMode
+	}
+| "WITH" "QUERY" "EXPANSION"
+	{
+		$$ = ast.FulltextSearchModifierWithQueryExpansion
+	}
 
 logOr:
 	pipesAsOr
@@ -4453,6 +4488,7 @@ UnReservedKeyword:
 | "WITHOUT" | "RTREE" | "EXCHANGE" | "COLUMN_FORMAT" | "REPAIR" | "IMPORT" | "DISCARD" | "TABLE_CHECKSUM" | "UNICODE"
 | "SQL_TSI_DAY" | "SQL_TSI_HOUR" | "SQL_TSI_MINUTE" | "SQL_TSI_MONTH" | "SQL_TSI_QUARTER" | "SQL_TSI_SECOND" |
 "SQL_TSI_WEEK" | "SQL_TSI_YEAR" | "INVISIBLE" | "VISIBLE" | "TYPE" | "NOWAIT" | "REPLICA" | "LOCATION" | "LABELS"
+| "LOGS" | "HOSTS" | "AGAINST" | "EXPANSION"
 
 TiDBKeyword:
  "ADMIN" | "AGG_TO_COP" |"BUCKETS" | "BUILTINS" | "CANCEL" | "CMSKETCH" | "DDL" | "DEPTH" | "DRAINER" | "JOBS" | "JOB" | "NODE_ID" | "NODE_STATE" | "PUMP" | "SAMPLES" | "STATS" | "STATS_META" | "STATS_HISTOGRAMS" | "STATS_BUCKETS" | "STATS_HEALTHY" | "TIDB"
@@ -6577,6 +6613,10 @@ IndexNameList:
 	{
 		$$ = []model.CIStr{model.NewCIStr($1)}
 	}
+|	IndexNameList ',' "PRIMARY"
+	{
+		$$ = append($1.([]model.CIStr), model.NewCIStr($3))
+	}
 
 IndexHintList:
 	IndexHint
@@ -6907,6 +6947,10 @@ HintTable:
 	{
 		$$ = ast.HintTable{TableName: model.NewCIStr($1), QBName: $2.(model.CIStr)}
 	}
+ |	Identifier '.' Identifier QueryBlockOpt
+ 	{
+ 		$$ = ast.HintTable{DBName: model.NewCIStr($1), TableName: model.NewCIStr($3), QBName: $4.(model.CIStr)}
+ 	}
 
 HintTableList:
 	HintTable
@@ -8344,6 +8388,18 @@ FlushOption:
 		$$ = &ast.FlushStmt{
 			Tp: ast.FlushTiDBPlugin,
 			Plugins: $3.([]string),
+		}
+	}
+|	"HOSTS"
+	{
+		$$ = &ast.FlushStmt{
+			Tp: ast.FlushHosts,
+		}
+	}
+|	"LOGS"
+	{
+		$$ = &ast.FlushStmt{
+			Tp: ast.FlushLogs,
 		}
 	}
 |	TableOrTables TableNameListOpt WithReadLockOpt
