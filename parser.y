@@ -10241,7 +10241,7 @@ RevokeRoleStmt:
  *********************************************************************/
 
 IndexAdviseStmt:
-        "INDEX" "ADVISE" LocalOpt "INFILE" stringLit MaxTime MaxIdxNum
+        "INDEX" "ADVISE" LocalOpt "INFILE" stringLit MaxTime MaxIdxNum Lines
         {
                 x := &ast.IndexAdviseStmt {
                         Path:           $5,
@@ -10251,6 +10251,10 @@ IndexAdviseStmt:
                 
                 if $3 != nil {
                         x.IsLocal = true
+                }
+
+                if $8 !=nil {
+                        x.LinesInfo = $8.(*ast.LinesClause) 
                 }
                 
                 $$ = x

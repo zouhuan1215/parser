@@ -992,6 +992,9 @@ func (s *testParserSuite) TestDBAStmt(c *C) {
 		// index advise statement
 		{"index advise local infile '/tmp/t.sql' max_minutes 10 max_idxnum 10", true, "INDEX ADVISE LOCAL INFILE '/tmp/t.sql' MAX_MINUTES 10 MAX_IDXNUM 10"},
 		{"index advise infile '/tmp/t.sql'", true, "INDEX ADVISE INFILE '/tmp/t.sql' MAX_MINUTES 60 MAX_IDXNUM 1024"},
+		{"index advise local infile '/tmp/t.sql' lines starting by 'ab'", true, "INDEX ADVISE LOCAL INFILE '/tmp/t.sql' MAX_MINUTES 60 MAX_IDXNUM 1024 LINES STARTING BY 'ab'"},
+		{"index advise local infile '/tmp/t.sql' max_minutes 10 lines starting by 'ab' terminated by 'xy'", true, "INDEX ADVISE LOCAL INFILE '/tmp/t.sql' MAX_MINUTES 10 MAX_IDXNUM 1024 LINES STARTING BY 'ab' TERMINATED BY 'xy'"},
+		{"index advise local infile '/tmp/t.sql' max_minutes 10 max_idxnum 10 lines terminated by 'xy'", true, "INDEX ADVISE LOCAL INFILE '/tmp/t.sql' MAX_MINUTES 10 MAX_IDXNUM 10 LINES TERMINATED BY 'xy'"},
 	}
 	s.RunTest(c, table)
 }

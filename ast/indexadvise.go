@@ -33,6 +33,7 @@ type IndexAdviseStmt struct {
 	Path      string
 	MaxTime   uint64
 	MaxIdxNum uint64
+	LinesInfo *LinesClause
 }
 
 // Restore implements Nodes interface.
@@ -54,6 +55,7 @@ func (n *IndexAdviseStmt) Restore(ctx *RestoreCtx) error {
 		ctx.WriteKeyWord(" MAX_IDXNUM ")
 		ctx.WritePlainf("%d", n.MaxIdxNum)
 	}
+	n.LinesInfo.Restore(ctx)
 
 	return nil
 }
